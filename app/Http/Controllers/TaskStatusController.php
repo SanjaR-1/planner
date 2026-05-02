@@ -1,6 +1,5 @@
 <?php
 namespace App\Http\Controllers;
-use App\Models\Project;
 use App\Models\TaskStatus;
 use Illuminate\Http\JsonResponse;
 use App\Services\TaskStatusService;
@@ -11,20 +10,18 @@ class TaskStatusController extends Controller
     public function __construct(
         protected TaskStatusService $taskStatusService
     ) {}
-    public function index(Project $project): JsonResponse
+    public function list(): JsonResponse
     {
-        $statuses = $this->taskStatusService->listByProject($project);
+        $statuses = $this->taskStatusService->list();
         return response()->json([
             'success' => true,
             'message' => 'Task statuses list',
             'data' => $statuses,
         ]);
     }
-    public function store(StoreTaskStatusRequest $request, Project $project): JsonResponse
+    public function create(StoreTaskStatusRequest $request): JsonResponse
     {
-        $status = $this->taskStatusService->store(
-            $project,
-            $request->validated()
+        $status = $this->taskStatusService->store($request->validated()
         );
         return response()->json([
             'success' => true,
@@ -44,7 +41,7 @@ class TaskStatusController extends Controller
             'data' => $status,
         ]);
     }
-    public function destroy(TaskStatus $status): JsonResponse
+    public function delete(TaskStatus $status): JsonResponse
     {
         $this->taskStatusService->delete($status);
         return response()->json([

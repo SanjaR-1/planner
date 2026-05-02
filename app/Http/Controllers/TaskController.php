@@ -3,12 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Task;
+use App\Models\Project;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\TaskService;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
-use App\Http\Requests\UpdateTaskStatusRequest;
 
 class TaskController extends Controller
 {
@@ -16,7 +16,7 @@ class TaskController extends Controller
         protected TaskService $taskService
     ) {}
 
-    public function index(Request $request): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $tasks = $this->taskService->paginate(
             (int) $request->get('per_page', 10)
@@ -28,12 +28,14 @@ class TaskController extends Controller
             'data' => $tasks,
         ]);
     }
-    public function store(StoreTaskRequest $request): JsonResponse
+    public function create(StoreTaskRequest $request, Project $project): JsonResponse
     {
         $task = $this->taskService->store(
             $request->validated(),
-            $request->user()
+            $request->user(),
+            $project
         );
+
         return response()->json([
             'success' => true,
             'message' => 'Task created successfully',
@@ -67,25 +69,12 @@ class TaskController extends Controller
             'data' => $task,
         ]);
     }
-    public function destroy(Task $task): JsonResponse
+    public function delete(Task $task): JsonResponse
     {
         $this->taskService->delete($task);
         return response()->json([
             'success' => true,
             'message' => 'Task deleted successfully',
-        ]);
-    }
-    public function updateStatus(UpdateTaskStatusRequest $request, Task $task): JsonResponse
-    {
-        $task = $this->taskService->updateStatus(
-            $task,
-            $request->validated(),
-            $request->user()
-        );
-        return response()->json([
-            'success' => true,
-            'message' => 'Task status updated successfully',
-            'data' => $task,
         ]);
     }
 }

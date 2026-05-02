@@ -11,6 +11,7 @@ class Task extends Model
         'created_by',
         'assigned_to',
         'status_id',
+        'priority_id',
         'body',
         'title',
         'deadline',
@@ -32,21 +33,12 @@ class Task extends Model
     {
         return $this->belongsTo(User::class, 'assigned_to');
     }
-
     public function status():BelongsTo
     {
         return $this->belongsTo(TaskStatus::class, 'status_id');
     }
-    public function comments():HasMany
+    public function priority():BelongsTo
     {
-        return $this->hasMany(TaskComment::class);
-    }
-    public function logs():HasMany
-    {
-        return $this->hasMany(TaskLog::class)->latest();
-    }
-    public function attachments():HasMany
-    {
-        return $this->hasMany(TaskAttachment::class);
+        return $this->belongsTo(TaskPriority::class, 'priority_id');
     }
 }

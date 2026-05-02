@@ -9,7 +9,7 @@ return new class extends Migration
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
-            $table->string('name');
+            $table->string('name')->unique();
             $table->string('description')->nullable();
             $table->timestamps();
         });

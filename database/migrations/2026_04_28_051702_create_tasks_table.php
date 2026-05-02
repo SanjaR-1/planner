@@ -11,9 +11,10 @@ return new class extends Migration
         Schema::create('tasks', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('created_by')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('created_by')->constrained('users')->nullOnDelete();
             $table->foreignId('assigned_to')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('status_id')->nullable()->constrained('task_statuses')->nullOnDelete();
+            $table->foreignId('priority_id')->nullable()->constrained('task_priorities')->nullOnDelete();
             $table->string('title');
             $table->longText('body')->nullable();
             $table->date('deadline')->nullable();

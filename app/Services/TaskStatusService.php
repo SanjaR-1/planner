@@ -2,28 +2,26 @@
 
 namespace App\Services;
 
-use App\Models\Project;
 use App\Models\TaskStatus;
+use Illuminate\Support\Collection;
 
 class TaskStatusService
 {
-    public function listByProject(Project $project)
+    public function list(): Collection
     {
-        return $project->statuses()
-            ->orderBy('sort_order')
-            ->get();
+        return TaskStatus::orderBy('sort_order','asc')->get();
     }
-    public function store(Project $project, array $data): TaskStatus
+    public function store( array $data): TaskStatus
     {
-        $data['project_id'] = $project->id;
-
-        return TaskStatus::create($data)->load('project:id,name');
+        if (!isset($data['sort_order'])) {
+            $data['sort_order'] = TaskStatus::max('sort_order') + 1;
+        }
+        return TaskStatus::create($data);
     }
     public function update(TaskStatus $status, array $data): TaskStatus
     {
         $status->update($data);
-
-        return $status->refresh()->load('project:id,name');
+        return $status->refresh();
     }
     public function delete(TaskStatus $status): bool
     {

@@ -19,10 +19,6 @@ class Project extends Model
     {
         return $this->belongsToMany(User::class, 'project_user');
     }
-    public function statuses():HasMany
-    {
-        return $this->hasMany(TaskStatus::class);
-    }
     public function tasks():HasMany
     {
         return $this->hasMany(Task::class);

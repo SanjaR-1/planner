@@ -2,26 +2,23 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use App\Models\Role;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $user = User::firstOrCreate([
-            'phone' => '998979222498',
-        ], [
-            'name' => 'Admin',
-            'password' => Hash::make('123456'),
-        ]);
-        $adminRole = Role::firstOrCreate([
-            'name' => 'admin',
-        ]);
-        $user->roles()->syncWithoutDetaching([
-            $adminRole->id
-        ]);
+        $adminRole = Role::where('name', 'admin')->firstOrFail();
+        User::updateOrCreate(
+            ['phone' => '998979222498'],
+            [
+                'role_id' => $adminRole->id,
+                'name' => 'admin',
+                'password' => Hash::make('123456'),
+            ]
+        );
     }
 }

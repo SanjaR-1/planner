@@ -14,24 +14,14 @@ class RoleSeeder extends Seeder
             ['name' => 'admin'],
             ['display_name' => 'Administrator']
         );
-
-        $developerRole = Role::firstOrCreate(
-            ['name' => 'developer'],
-            ['display_name' => 'Developer']
+        $guestRole = Role::firstOrCreate(
+            ['name' => 'guest'],
+            ['display_name' => 'mehmon']
         );
-
         $allPermissions = Permission::pluck('id')->toArray();
-
         $adminRole->permissions()->sync($allPermissions);
-
-        $developerPermissions = Permission::whereIn('name', [
-            'project.view',
-            'task.view',
-            'task.update',
-            'task.change_status',
-            'task.comment',
+        $guestPermissions = Permission::whereIn('name', [
         ])->pluck('id')->toArray();
-
-        $developerRole->permissions()->sync($developerPermissions);
+        $guestRole->permissions()->sync($guestPermissions);
     }
 }

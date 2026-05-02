@@ -12,12 +12,15 @@ class UserService
         $user = User::create($data);
         return $user->load('role');
     }
-    public function update(User $user,array $data){
-        if(isset($data['password'])){
+    public function update(User $user, array $data)
+    {
+        if (!empty($data['password'])) {
             $data['password'] = Hash::make($data['password']);
+        } else {
+            unset($data['password']);
         }
         $user->update($data);
-        return $user->refresh()->load('role:id');
+        return $user->refresh()->load('role:id,name');
     }
     public function delete(User $user){
         return $user->delete();

@@ -11,7 +11,7 @@ class PermissionController extends Controller
     public function __construct(
         protected PermissionService $permissionService
     ) {}
-    public function index(Request $request): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $permissions = $this->permissionService->paginate(
             (int) $request->get('per_page', 10)
@@ -22,7 +22,7 @@ class PermissionController extends Controller
             'data' => $permissions,
         ]);
     }
-    public function store(StorePermissionRequest $request): JsonResponse
+    public function create(StorePermissionRequest $request): JsonResponse
     {
         $permission = $this->permissionService->store($request->validated());
         return response()->json([
@@ -50,7 +50,7 @@ class PermissionController extends Controller
             'data' => $permission,
         ]);
     }
-    public function destroy(Permission $permission): JsonResponse
+    public function delete(Permission $permission): JsonResponse
     {
         $this->permissionService->delete($permission);
         return response()->json([

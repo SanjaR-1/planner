@@ -1,12 +1,12 @@
 <?php
-
 namespace App\Models;
-
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
 class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
@@ -20,15 +20,15 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
-    public function role()
+    public function role():BelongsTo
     {
         return $this->belongsTo(Role::class);
     }
-    public function createdProjects()
+    public function createdProjects(): HasMany
     {
         return $this->hasMany(Project::class, 'created_by');
     }
-    public function projects()
+    public function projects():BelongsToMany
     {
         return $this->belongsToMany(Project::class, 'project_user');
     }
@@ -40,20 +40,12 @@ class User extends Authenticatable
     {
         return $this->hasMany(Task::class, 'assigned_to');
     }
-    public function taskComments()
-    {
-        return $this->hasMany(TaskComment::class);
-    }
-    public function taskLogs()
-    {
-        return $this->hasMany(TaskLog::class);
-    }
     public function hasPermission(string $permission): bool
     {
         return $this->role()
-            ->whereHas('permissions', function ($query) use ($permission) {
-                $query->where('name', $permission);
-            })
-            ->exists();
+            ->whereHas('permissions',
+                function ($query) use ($permission)
+                {$query->where('name', $permission);}
+            )->exists();
     }
 }

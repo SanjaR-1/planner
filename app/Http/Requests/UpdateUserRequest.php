@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends FormRequest
 {
@@ -12,18 +13,19 @@ class UpdateUserRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
-
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            //
+            'name' => 'sometimes|string|max:255',
+            'phone' => [
+                'sometimes',
+                'string',
+                Rule::unique('users', 'phone')->ignore($this->route('user')),
+            ],
+            'password' => 'nullable|string|min:6|confirmed',
+            'role_id' => 'sometimes|exists:roles,id'
         ];
     }
 }

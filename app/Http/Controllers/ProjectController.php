@@ -12,7 +12,7 @@ class ProjectController extends Controller
     public function __construct(
         protected ProjectService $projectService
     ) {}
-    public function index(Request $request): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $projects = $this->projectService->paginate(
             (int) $request->get('per_page', 10)
@@ -23,7 +23,7 @@ class ProjectController extends Controller
             'data' => $projects
         ]);
     }
-    public function store(StoreProjectRequest $request): JsonResponse
+    public function create(StoreProjectRequest $request): JsonResponse
     {
         $project = $this->projectService->store(
             $request->validated(),
@@ -57,10 +57,9 @@ class ProjectController extends Controller
             'data' => $project
         ]);
     }
-    public function destroy(Project $project): JsonResponse
+    public function delete(Project $project): JsonResponse
     {
         $this->projectService->delete($project);
-
         return response()->json([
             'success' => true,
             'message' => 'Project deleted successfully'

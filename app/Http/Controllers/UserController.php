@@ -11,7 +11,7 @@ use App\Http\Requests\UpdateUserRequest;
 class UserController extends Controller
 {
     public function __construct(protected UserService $userService) {}
-    public function index(Request $request): JsonResponse
+    public function list(Request $request): JsonResponse
     {
         $users = $this->userService->paginate(
             (int) $request->get('per_page', 10)
@@ -22,7 +22,7 @@ class UserController extends Controller
             'data' => $users,
         ]);
     }
-    public function store(UserRegisterRequest $request): JsonResponse
+    public function create(UserRegisterRequest $request): JsonResponse
     {
         $user = $this->userService->store($request->validated());
         return response()->json([
@@ -47,7 +47,7 @@ class UserController extends Controller
             'data' => $updated_user,
         ]);
     }
-    public function destroy(User $user): JsonResponse
+    public function delete(User $user): JsonResponse
     {
         $this->userService->delete($user);
 
