@@ -14,9 +14,7 @@ class ProjectController extends Controller
     ) {}
     public function list(Request $request): JsonResponse
     {
-        $projects = $this->projectService->paginate(
-            (int) $request->get('per_page', 10)
-        );
+        $projects = $this->projectService->paginate($request);
         return response()->json([
             'success' => true,
             'message' => 'Projects list',

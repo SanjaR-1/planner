@@ -7,18 +7,61 @@ use App\Models\Project;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-
 class TaskService
 {
-    public function paginate(int $perPage = 10)
+    public function paginate($request)
     {
-        return Task::with([
-            'project:id,name',
-            'status:id,name',
-            'priority:id,name',
-            'developer:id,name',
-            'creator:id,name',
-        ])->latest()->paginate($perPage);
+        $search = $request->search;
+        $tasks = Task::query()
+            #task title bo'yicha poisk
+            ->when($search, function ($query) use ($search) {
+                $query->where('title', 'like', "%{$search}%");
+            })
+            #qaysi vaqt oralig'ida qilingan
+            ->when(
+                $request->start_date && $request->end_date,
+                function ($query) use ($request) {
+                    $query->whereBetween('created_at', [
+                        $request->start_date,
+                        $request->end_date
+                    ]);
+                }
+            )
+            #assign qilingan developer bo'yicha filtr
+            ->when($request->assigned_to,
+                fn ($query) => $query
+                    ->where('assigned_to', $request->assigned_to)
+            )
+            #Project bo'yicha
+            ->when($request->project_id,
+                fn ($query) => $query
+                    ->where('project_id', $request->project_id)
+            )
+            #prioritet bo'yicha
+            ->when($request->priority_id,
+                fn ($query) => $query
+                    ->where('priority_id', $request->priority_id)
+            )
+            #status bo'yicha
+            ->when($request->status_id,
+                fn ($query) => $query
+                    ->where('status_id', $request->status_id)
+            )
+            #creator bo'yicha
+            ->when($request->created_by,
+                fn ($query) => $query
+                ->where('created_by', $request->created_by)
+            )
+            ->when($request->sort === 'created_at_asc', fn ($q) => $q->orderBy('created_at'))
+            ->when($request->sort === 'created_at_desc', fn ($q) => $q->orderByDesc('created_at'))
+            ->with([
+                'project:id,name',
+                'status:id,name',
+                'priority:id,name',
+                'developer:id,name',
+                'creator:id,name',
+            ])->latest()->paginate((int) $request -> get('per_page',10));
+        return $tasks;
     }
     public function store(array $data, User $user, Project $project): Task
     {

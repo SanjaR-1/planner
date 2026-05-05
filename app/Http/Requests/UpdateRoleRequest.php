@@ -23,7 +23,7 @@ class UpdateRoleRequest extends FormRequest
                 'max:255',
                 Rule::unique('roles', 'name')->ignore($role),
             ],
-            'display_name' => 'nullable|string|max:255',
+            'display_name' => 'sometimes|nullable|string|max:255',
             'permission_ids' => 'nullable|array',
             'permission_ids.*' => 'exists:permissions,id',
         ];

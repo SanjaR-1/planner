@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use App\Services\RoleService;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
-use App\Http\Requests\AttachPermissionsRequest;
 
 class RoleController extends Controller
 {
@@ -19,9 +18,7 @@ class RoleController extends Controller
 
     public function list(Request $request): JsonResponse
     {
-        $roles = $this->roleService->paginate(
-            (int) $request->get('per_page', 10)
-        );
+        $roles = $this->roleService->paginate($request);
         return response()->json([
             'success' => true,
             'message' => 'Roles list',

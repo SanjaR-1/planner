@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('priority_id')->nullable()->constrained('task_priorities')->nullOnDelete();
             $table->string('title');
             $table->longText('body')->nullable();
-            $table->date('deadline')->nullable();
+            $table->dateTime('deadline')->nullable();
             $table->timestamps();
         });
     }

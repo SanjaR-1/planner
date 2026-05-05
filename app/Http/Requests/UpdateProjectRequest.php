@@ -16,7 +16,7 @@ class UpdateProjectRequest extends FormRequest
     {
         return [
             'name' => [
-                'required',
+                'sometimes',
                 'string',
                 'max:255',
                 Rule::unique('projects', 'name')

@@ -21,8 +21,7 @@ class TaskStatusController extends Controller
     }
     public function create(StoreTaskStatusRequest $request): JsonResponse
     {
-        $status = $this->taskStatusService->store($request->validated()
-        );
+        $status = $this->taskStatusService->store($request->validated());
         return response()->json([
             'success' => true,
             'message' => 'Task status created successfully',

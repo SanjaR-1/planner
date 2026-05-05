@@ -16,12 +16,9 @@ class TaskController extends Controller
         protected TaskService $taskService
     ) {}
 
-    public function list(Request $request): JsonResponse
+    public function list(Project $project, Request $request): JsonResponse
     {
-        $tasks = $this->taskService->paginate(
-            (int) $request->get('per_page', 10)
-        );
-
+        $tasks = $this->taskService->paginate($request);
         return response()->json([
             'success' => true,
             'message' => 'Tasks list',
@@ -35,15 +32,15 @@ class TaskController extends Controller
             $request->user(),
             $project
         );
-
         return response()->json([
             'success' => true,
             'message' => 'Task created successfully',
             'data' => $task,
         ], 201);
     }
-    public function show(Task $task): JsonResponse
+    public function show(Project $project, Task $task): JsonResponse
     {
+        abort_if($task->project_id !== $project->id, 404);
         return response()->json([
             'success' => true,
             'data' => $task->load([
@@ -51,14 +48,13 @@ class TaskController extends Controller
                 'creator:id,name',
                 'developer:id,name',
                 'status:id,name',
-                'logs',
-                'comments',
-                'attachments',
+                'priority:id,name',
             ]),
         ]);
     }
-    public function update(UpdateTaskRequest $request, Task $task): JsonResponse
+    public function update(UpdateTaskRequest $request,Project $project, Task $task): JsonResponse
     {
+        abort_if($task->project_id !== $project->id, 404);
         $task = $this->taskService->update(
             $task,
             $request->validated()
@@ -69,8 +65,9 @@ class TaskController extends Controller
             'data' => $task,
         ]);
     }
-    public function delete(Task $task): JsonResponse
+    public function delete(Project $project, Task $task): JsonResponse
     {
+        abort_if($task->project_id !== $project->id, 404);
         $this->taskService->delete($task);
         return response()->json([
             'success' => true,

@@ -13,9 +13,7 @@ class UserController extends Controller
     public function __construct(protected UserService $userService) {}
     public function list(Request $request): JsonResponse
     {
-        $users = $this->userService->paginate(
-            (int) $request->get('per_page', 10)
-        );
+        $users = $this->userService->paginate($request);
         return response()->json([
             'success' => true,
             'message' => 'Users list',

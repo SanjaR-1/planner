@@ -17,7 +17,7 @@ class Task extends Model
         'deadline',
     ];
     protected $casts = [
-        'deadline' => 'date',
+        'deadline' => 'datetime',
     ];
     public function project():BelongsTo
     {

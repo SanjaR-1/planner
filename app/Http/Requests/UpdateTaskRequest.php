@@ -19,7 +19,7 @@ class UpdateTaskRequest extends FormRequest
             'priority_id' => 'sometimes|nullable|exists:task_priorities,id',
             'title' => 'sometimes|string|max:255',
             'body' => 'sometimes|nullable|string',
-            'deadline' => 'sometimes|nullable|date|after_or_equal:today',
+            'deadline' => 'sometimes|nullable|date|after_or_equal:now',
         ];
     }
 }
