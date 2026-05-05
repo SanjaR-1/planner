@@ -14,7 +14,7 @@ class PermissionController extends Controller
     public function list(Request $request): JsonResponse
     {
         $permissions = $this->permissionService->paginate(
-            (int) $request->get('per_page', 10)
+            $request
         );
         return response()->json([
             'success' => true,
