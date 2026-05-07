@@ -18,12 +18,40 @@ Protected endpointlarda header yuboriladi:
   Accept: application/json
   Content-Type: application/json
 
-Standart response shakli:
+Standart success response shakli:
 
 {
-    "success": true,
+    "status": true,
     "message": "...",
     "data": ...
+}
+
+Pagination response shakli:
+
+{
+    "status": true,
+    "message": "...",
+    "data": {
+        "items": [],
+        "pagination": {
+            "total": 0,
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 10,
+            "prev_page_url": null,
+            "next_page_url": null,
+            "from": null,
+            "to": null
+        }
+    }
+}
+
+Standart error response shakli:
+
+{
+    "status": false,
+    "message": "...",
+    "errors": null
 }
 
 
@@ -34,9 +62,9 @@ Standart response shakli:
 ----------------------------
 Auth: kerak emas
 
-fieldlar:
-    'phone' => 'required|string',
-    'password' => 'required|string'
+Validation:
+  - phone: required|string
+  - password: required|string
 
 Request body:
 {
@@ -46,7 +74,7 @@ Request body:
 
 Response misol:
 {
-    "success": true,
+    "status": true,
     "message": "Login Successful",
     "data": {
         "token": "TOKEN_HERE",
@@ -62,14 +90,13 @@ Response misol:
     }
 }
 
-
 2.2. Current user — GET /api/me
 -------------------------------
 Auth: Bearer token kerak
 
 Response misol:
 {
-    "success": true,
+    "status": true,
     "message": "Current user",
     "data": {
         "id": 1,
@@ -89,10 +116,10 @@ Auth: Bearer token kerak
 
 Response misol:
 {
-    "success": true,
-    "message": "Logged out successfully"
+    "status": true,
+    "message": "Logged out successfully",
+    "data": null
 }
-
 
 3. USERS API LAR
 =================
@@ -112,10 +139,10 @@ GET /api/users?search=ali&role_id=2&per_page=10
 
 Response misol:
 {
-    "success": true,
+    "status": true,
     "message": "Users list",
     "data": {
-        "data": [
+        "items": [
             {
                 "id": 1,
                 "name": "Ali",
@@ -125,21 +152,30 @@ Response misol:
                     "name": "developer"
                 }
             }
-        ]
+        ],
+        "pagination": {
+            "total": 1,
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 10,
+            "prev_page_url": null,
+            "next_page_url": null,
+            "from": 1,
+            "to": 1
+        }
     }
 }
-
 
 3.2. User yaratish — POST /api/users
 ------------------------------------
 Auth: Bearer token kerak
 Permission: user.create
 
-Fieldlar:
-  - name: required, string
-  - phone: required, unique
-  - password: required, min 6, confirmed
-  - role_id: required, exists roles.id
+Validation:
+  - name: required|string|max:255
+  - phone: required|string|unique:users,phone
+  - password: required|string|min:6|confirmed
+  - role_id: required|exists:roles,id
 
 Request body:
 {
@@ -150,6 +186,22 @@ Request body:
     "role_id": 2
 }
 
+Response misol:
+{
+    "status": true,
+    "message": "User created successfully",
+    "data": {
+        "id": 2,
+        "name": "Ali",
+        "phone": "998901234567",
+        "role_id": 2,
+        "role": {
+            "id": 2,
+            "name": "developer"
+        }
+    }
+}
+
 3.3. User ko'rish — GET /api/users/{user}
 -----------------------------------------
 Auth: Bearer token kerak
@@ -158,24 +210,62 @@ Permission: user.view
 Request misol:
 GET /api/users/1
 
+Response misol:
+{
+    "status": true,
+    "message": "User found",
+    "data": {
+        "id": 1,
+        "name": "Admin",
+        "phone": "998901234567",
+        "role": {
+            "id": 1,
+            "name": "admin"
+        }
+    }
+}
 
 3.4. User yangilash — PUT /api/users/{user}
 -------------------------------------------
 Auth: Bearer token kerak
 Permission: user.update
 
-fieldlar:
-    'name' => 'sometimes|string|max:255'
-    'phone' => 'sometimes','string','unique' (actual turgan phone ignor qilgan holda unique)
-    'password' => 'nullable|string|min:6|confirmed'
-    'role_id' => 'sometimes|exists:roles,id'
+Validation:
+  - name: sometimes|string|max:255
+  - phone: sometimes|string|unique:users,phone,{user_id}
+  - password: nullable|string|min:6|confirmed
+  - role_id: sometimes|exists:roles,id
 
 Request body:
 {
     "name": "Ali Updated",
-    "phone": "998901234567",
-    "password": null,
+    "phone": "998901234568",
+    "password": "newpassword",
+    "password_confirmation": "newpassword",
     "role_id": 2
+}
+Agar password o'zgarmasa, password fieldlarni yubormasa ham bo'ladi:
+Request body:
+{
+    "name": "Ali Updated",
+    "phone": "998901234568",
+    "role_id": 2
+}
+
+Response misol:
+{
+    "status": true,
+    "message": "User updated successfully",
+    "data": {
+        "id": 2,
+        "name": "Ali Updated",
+        "phone": "998901234568",
+        "role_id": 2,
+        "role": {
+            "id": 2,
+            "name": "developer"
+        }
+    }
 }
 
 3.5. User o'chirish — DELETE /api/users/{user}
@@ -183,6 +273,15 @@ Request body:
 Auth: Bearer token kerak
 Permission: user.delete
 
+Request misol:
+DELETE /api/users/2
+
+Response misol:
+{
+    "status": true,
+    "message": "User deleted successfully",
+    "data": null
+}
 
 4. ROLES API LAR
 =================
@@ -198,17 +297,18 @@ Query params:
   - per_page: integer, default 10
 
 Request misol:
-GET /api/roles?permission_id=3&per_page=10
+GET /api/roles?search=admin&permission_id=3&per_page=10
 
 Response misol:
 {
-    "success": true,
-    "message": "Roles list",
+    "status": true,
+    "message": "List roles",
     "data": {
-        "data": [
+        "items": [
             {
                 "id": 1,
                 "name": "admin",
+                "display_name": "Admin",
                 "permissions": [
                     {
                         "id": 1,
@@ -216,7 +316,17 @@ Response misol:
                     }
                 ]
             }
-        ]
+        ],
+        "pagination": {
+            "total": 1,
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 10,
+            "prev_page_url": null,
+            "next_page_url": null,
+            "from": 1,
+            "to": 1
+        }
     }
 }
 
@@ -225,59 +335,110 @@ Response misol:
 Auth: Bearer token kerak
 Permission: role.create
 
+Validation:
+  - name: required|string|max:255|unique:roles,name
+  - display_name: nullable|string|max:255
+  - permission_ids: nullable|array
+  - permission_ids.*: exists:permissions,id
+
 Request body:
 {
     "name": "manager",
+    "display_name": "Manager",
     "permission_ids": [1, 2, 3]
 }
 
-Fieldlar:
-  - name: required, unique
-  - display_name: nullable|string
-  - permission_ids: array, nullable
-  - permission_ids.*: exists permissions.id
-
+Response misol:
+{
+    "status": true,
+    "message": "Role created successfully",
+    "data": {
+        "id": 2,
+        "name": "manager",
+        "display_name": "Manager",
+        "permissions": [
+            {
+                "id": 1,
+                "name": "task.create"
+            }
+        ]
+    }
+}
 
 4.3. Role ko'rish — GET /api/roles/{role}
 -----------------------------------------
 Auth: Bearer token kerak
 Permission: role.view
 
+Request misol:
+GET /api/roles/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Role found",
+    "data": {
+        "id": 1,
+        "name": "admin",
+        "display_name": "Admin",
+        "permissions": [
+            {
+                "id": 1,
+                "name": "task.create"
+            }
+        ]
+    }
+}
 
 4.4. Role yangilash — PUT /api/roles/{role}
 -------------------------------------------
 Auth: Bearer token kerak
 Permission: role.update
 
-
-4.2. Role yaratish — POST /api/roles
-------------------------------------
-Auth: Bearer token kerak
-Permission: role.create
-
-Request body:
-{
-    "name": "manager",
-    "permission_ids": [1, 2, 3]
-}
-
-Fieldlar:
-  - name: sometimes, unique (o'zidan boshqa namelar bo'yicha unique, o'zini nameni qayta kiritish mumkin)
-  - display_name: sometimes,nullable,string
-  - permission_ids: array, nullable
-  - permission_ids.*: exists permissions.id
+Validation:
+  - name: sometimes|string|max:255|unique:roles,name,{role_id}
+  - display_name: sometimes|nullable|string|max:255
+  - permission_ids: nullable|array
+  - permission_ids.*: exists:permissions,id
 
 Request body:
 {
-    "name": "admin",
+    "name": "manager_updated",
+    "display_name": "Manager Updated",
     "permission_ids": [1, 2, 3, 4]
 }
 
+Response misol:
+{
+    "status": true,
+    "message": "Role updated successfully",
+    "data": {
+        "id": 2,
+        "name": "manager_updated",
+        "display_name": "Manager Updated",
+        "permissions": [
+            {
+                "id": 1,
+                "name": "task.create"
+            }
+        ]
+    }
+}
 
 4.5. Role o'chirish — DELETE /api/roles/{role}
 ----------------------------------------------
 Auth: Bearer token kerak
 Permission: role.delete
+
+Request misol:
+DELETE /api/roles/2
+
+Response misol:
+{
+    "status": true,
+    "message": "Role deleted successfully",
+    "data": null
+}
 
 
 5. PERMISSIONS API LAR
@@ -297,58 +458,114 @@ GET /api/permissions?search=task&per_page=10
 
 Response misol:
 {
-    "success": true,
-    "message": "Permissions list",
+    "status": true,
+    "message": "Permission List",
     "data": {
-        "data": [
+        "items": [
             {
                 "id": 1,
-                "name": "task.create"
+                "name": "task.create",
+                "display_name": "Task Create"
             }
-        ]
+        ],
+        "pagination": {
+            "total": 1,
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 10,
+            "prev_page_url": null,
+            "next_page_url": null,
+            "from": 1,
+            "to": 1
+        }
     }
 }
-
 
 5.2. Permission yaratish — POST /api/permissions
 ------------------------------------------------
 Auth: Bearer token kerak
 Permission: permission.create
 
-Fieldlar:
-    - name: required|string|unique:permissions,name (
-    - display_name: nullable|string
+Validation:
+  - name: required|string|max:255|unique:permissions,name
+  - display_name: nullable|string|max:255
 
 Request body:
 {
-    "name": "task.create"
+    "name": "task.create",
+    "display_name": "Task Create"
 }
 
+Response misol:
+{
+    "status": true,
+    "message": "Permission Created",
+    "data": {
+        "id": 1,
+        "name": "task.create",
+        "display_name": "Task Create"
+    }
+}
 
 5.3. Permission ko'rish — GET /api/permissions/{permission}
 -----------------------------------------------------------
 Auth: Bearer token kerak
 Permission: permission.view
 
+Request misol:
+GET /api/permissions/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Permission found",
+    "data": {
+        "id": 1,
+        "name": "task.create",
+        "display_name": "Task Create"
+    }
+}
 
 5.4. Permission yangilash — PUT /api/permissions/{permission}
 -------------------------------------------------------------
 Auth: Bearer token kerak
 Permission: permission.update
 
-Fieldlar:
-    - name: sometimes,string,unique:permissions,name (o'zidan boshqa namelar orasida unique, tepada yozganimga o'xshab)
-    - display_name: nullable,string
+Validation:
+  - name: sometimes|string|max:255|unique:permissions,name,{permission_id}
+  - display_name: nullable|string|max:255
 
 Request body:
 {
-    "name": "task.update"
+    "name": "task.update",
+    "display_name": "Task Update"
+}
+
+Response misol:
+{
+    "status": true,
+    "message": "Permission updated successfully",
+    "data": {
+        "id": 1,
+        "name": "task.update",
+        "display_name": "Task Update"
+    }
 }
 
 5.5. Permission o'chirish — DELETE /api/permissions/{permission}
 ----------------------------------------------------------------
 Auth: Bearer token kerak
 Permission: permission.delete
+
+Request misol:
+DELETE /api/permissions/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Permission deleted successfully",
+    "data": null
+}
 
 
 6. PROJECTS API LAR
@@ -367,16 +584,17 @@ Query params:
 
 Request misollar:
 GET /api/projects
+GET /api/projects?search=crm
 GET /api/projects?created_by=1
 GET /api/projects?developer_id=2
-GET /api/projects?created_by=1&developer_id=2
+GET /api/projects?created_by=1&developer_id=2&per_page=10
 
 Response misol:
 {
-    "success": true,
-    "message": "Projects list",
+    "status": true,
+    "message": "Project list",
     "data": {
-        "data": [
+        "items": [
             {
                 "id": 1,
                 "name": "CRM system",
@@ -392,15 +610,28 @@ Response misol:
                     }
                 ]
             }
-        ]
+        ],
+        "pagination": {
+            "total": 1,
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 10,
+            "prev_page_url": null,
+            "next_page_url": null,
+            "from": 1,
+            "to": 1
+        }
     }
 }
-
 
 6.2. Project yaratish — POST /api/projects
 ------------------------------------------
 Auth: Bearer token kerak
 Permission: project.create
+
+Validation:
+  - name: required|string|max:255|unique:projects,name
+  - description: nullable|string
 
 Request body:
 {
@@ -408,56 +639,38 @@ Request body:
     "description": "Project description"
 }
 
-Fieldlar:
-  - name: required, unique
-  - description: nullable
-
+Response misol:
+{
+    "status": true,
+    "message": "Project created successfully",
+    "data": {
+        "id": 1,
+        "name": "CRM system",
+        "description": "Project description",
+        "created_by": 1
+    }
+}
 
 6.3. Project ko'rish — GET /api/projects/{project}
 --------------------------------------------------
 Auth: Bearer token kerak
 Permission: project.view
 
-
-6.4. Project yangilash — PUT /api/projects/{project}
-----------------------------------------------------
-Auth: Bearer token kerak
-Permission: project.update
-
-Request body:
-{
-    "name": "CRM system updated",
-    "description": "Updated description"
-}
-
-
-6.5. Project o'chirish — DELETE /api/projects/{project}
--------------------------------------------------------
-Auth: Bearer token kerak
-Permission: project.delete
-
-
-6.6. Projectga user biriktirish — POST /api/projects/{project}/users
---------------------------------------------------------------------
-Auth: Bearer token kerak
-Permission: project.assign_user
-
-Request body:
-{
-    "user_id": [2, 3]
-}
-
-Fieldlar:
-  - user_id: required, array
-  - user_id.*: exists users.id
+Request misol:
+GET /api/projects/1
 
 Response misol:
 {
-    "success": true,
-    "message": "Users attached to project successfully",
+    "status": true,
+    "message": "Project found",
     "data": {
         "id": 1,
         "name": "CRM system",
+        "description": "Project description",
+        "creator": {
+            "id": 1,
+            "name": "Admin"
+        },
         "developers": [
             {
                 "id": 2,
@@ -468,11 +681,100 @@ Response misol:
 }
 
 
+6.4. Project yangilash — PUT /api/projects/{project}
+----------------------------------------------------
+Auth: Bearer token kerak
+Permission: project.update
+
+Validation:
+  - name: sometimes|string|max:255|unique:projects,name,{project_id}
+  - description: nullable|string
+
+Request body:
+{
+    "name": "CRM system updated",
+    "description": "Updated description"
+}
+
+Response misol:
+{
+    "status": true,
+    "message": "Project updated successfully",
+    "data": {
+        "id": 1,
+        "name": "CRM system updated",
+        "description": "Updated description"
+    }
+}
+
+6.5. Project o'chirish — DELETE /api/projects/{project}
+-------------------------------------------------------
+Auth: Bearer token kerak
+Permission: project.delete
+
+Request misol:
+DELETE /api/projects/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Project deleted successfully",
+    "data": null
+}
+
+
+6.6. Projectga user biriktirish — POST /api/projects/{project}/users
+--------------------------------------------------------------------
+Auth: Bearer token kerak
+Permission: project.assign_user
+
+Validation:
+  - user_id: required|array
+  - user_id.*: exists:users,id
+
+Request body:
+{
+    "user_id": [2, 3]
+}
+
+Response misol:
+{
+    "status": true,
+    "message": "Users attached to project successfully",
+    "data": {
+        "id": 1,
+        "name": "CRM system",
+        "developers": [
+            {
+                "id": 2,
+                "name": "Ali"
+            },
+            {
+                "id": 3,
+                "name": "Vali"
+            }
+        ]
+    }
+}
+
 6.7. Projectdan userni ajratish — DELETE /api/projects/{project}/users/{user}
 -----------------------------------------------------------------------------
 Auth: Bearer token kerak
 Permission: project.assign_user
 
+Request misol:
+DELETE /api/projects/1/users/2
+
+Response misol:
+{
+    "status": true,
+    "message": "User detached from project successfully",
+    "data": {
+        "id": 1,
+        "name": "CRM system",
+        "developers": []
+    }
+}
 
 7. TASK STATUS API LAR
 =======================
@@ -482,10 +784,13 @@ Permission: project.assign_user
 Auth: Bearer token kerak
 Permission: task.view
 
+Request misol:
+GET /api/statuses
+
 Response misol:
 {
-    "success": true,
-    "message": "Task statuses list",
+    "status": true,
+    "message": "Task Status List",
     "data": [
         {
             "id": 1,
@@ -495,15 +800,14 @@ Response misol:
     ]
 }
 
-
 7.2. Status yaratish — POST /api/statuses
 -----------------------------------------
 Auth: Bearer token kerak
 Permission: task.create
 
-fieldlar:
-  - name: required|unique:task_statuses,name|string
-  - sort_order: nullable,integer,min:0
+Validation:
+  - name: required|string|max:255|unique:task_statuses,name
+  - sort_order: nullable|integer|min:0
 
 Request body:
 {
@@ -511,14 +815,25 @@ Request body:
     "sort_order": 1
 }
 
+Response misol:
+{
+    "status": true,
+    "message": "Task status created successfully",
+    "data": {
+        "id": 1,
+        "name": "Todo",
+        "sort_order": 1
+    }
+}
 
 7.3. Status yangilash — PUT /api/statuses/{status}
 --------------------------------------------------
 Auth: Bearer token kerak
 Permission: task.update
-Fieldlar:
-    - name: sometimes|unique:task_statuses,name|string (bu ham o'zidan boshqa namelar uchun unique)
-    - sort_order: sometimes,nullable,integer,min:0
+
+Validation:
+  - name: sometimes|string|max:255|unique:task_statuses,name,{status_id}
+  - sort_order: sometimes|nullable|integer|min:0
 
 Request body:
 {
@@ -526,12 +841,31 @@ Request body:
     "sort_order": 2
 }
 
+Response misol:
+{
+    "status": true,
+    "message": "Task status updated successfully",
+    "data": {
+        "id": 1,
+        "name": "In Progress",
+        "sort_order": 2
+    }
+}
 
 7.4. Status o'chirish — DELETE /api/statuses/{status}
 -----------------------------------------------------
 Auth: Bearer token kerak
 Permission: task.delete
 
+Request misol:
+DELETE /api/statuses/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Task status deleted successfully",
+    "data": null
+}
 
 8. TASK PRIORITY API LAR
 =========================
@@ -541,10 +875,14 @@ Permission: task.delete
 Auth: Bearer token kerak
 Permission: task.view
 
+
+Request misol:
+GET /api/priorities
+
 Response misol:
 {
-    "success": true,
-    "message": "Task priorities list",
+    "status": true,
+    "message": "Task Priority List",
     "data": [
         {
             "id": 1,
@@ -554,20 +892,30 @@ Response misol:
     ]
 }
 
-
 8.2. Priority yaratish — POST /api/priorities
 ---------------------------------------------
 Auth: Bearer token kerak
 Permission: task.create
 
-Fieldlar;
-    - name: required|unique:task_priorities,name|string
-    - sort_order: nullable|integer|min:0
+Validation:
+  - name: required|string|max:255|unique:task_priorities,name
+  - sort_order: nullable|integer|min:0
 
 Request body:
 {
     "name": "High",
     "sort_order": 1
+}
+
+Response misol:
+{
+    "status": true,
+    "message": "Task priority created",
+    "data": {
+        "id": 1,
+        "name": "High",
+        "sort_order": 1
+    }
 }
 
 
@@ -576,9 +924,9 @@ Request body:
 Auth: Bearer token kerak
 Permission: task.update
 
-Fieldlar;
-    - name: sometimes|unique:task_priorities,name|string (faqat o'zidan boshqa namelarga unique)
-    - sort_order: nullable|integer|min:0
+Validation:
+  - name: sometimes|string|max:255|unique:task_priorities,name,{priority_id}
+  - sort_order: sometimes|nullable|integer|min:0
 
 Request body:
 {
@@ -586,12 +934,31 @@ Request body:
     "sort_order": 2
 }
 
+Response misol:
+{
+    "status": true,
+    "message": "Task priority updated",
+    "data": {
+        "id": 1,
+        "name": "Low",
+        "sort_order": 2
+    }
+}
 
 8.4. Priority o'chirish — DELETE /api/priorities/{priority}
 -----------------------------------------------------------
 Auth: Bearer token kerak
 Permission: task.delete
 
+Request misol:
+DELETE /api/priorities/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Task priority deleted",
+    "data": null
+}
 
 9. TASKS API LAR
 =================
@@ -640,10 +1007,10 @@ GET /api/projects/1/tasks?search=api&assigned_to=2&status_id=1&per_page=10
 
 Response misol:
 {
-    "success": true,
+    "status": true,
     "message": "Tasks list",
     "data": {
-        "data": [
+        "items": [
             {
                 "id": 1,
                 "title": "Create login API",
@@ -670,7 +1037,17 @@ Response misol:
                     "name": "High"
                 }
             }
-        ]
+        ],
+        "pagination": {
+            "total": 1,
+            "current_page": 1,
+            "last_page": 1,
+            "per_page": 10,
+            "prev_page_url": null,
+            "next_page_url": null,
+            "from": 1,
+            "to": 1
+        }
     }
 }
 
@@ -679,6 +1056,14 @@ Response misol:
 -------------------------------------------------------
 Auth: Bearer token kerak
 Permission: task.create
+
+Validation:
+  - assigned_to: nullable|exists:users,id
+  - status_id: required|exists:task_statuses,id
+  - priority_id: required|exists:task_priorities,id
+  - title: required|string|max:255
+  - body: nullable|string
+  - deadline: nullable|date|after_or_equal:now
 
 Request body:
 {
@@ -690,18 +1075,27 @@ Request body:
     "deadline": "2026-05-20"
 }
 
-Fieldlar:
-  - title: required, string
-  - body: nullable, string
-  - assigned_to: nullable, exists users.id
-  - status_id: required, exists task_statuses.id
-  - priority_id: required, exists task_priorities.id
-  - deadline: nullable, date
-
 Muhim:
-  assigned_to qilingan user shu projectga oldin biriktirilgan bo'lishi kerak.
-  Aks holda backend validation error qaytaradi.
+  - assigned_to qilingan user shu projectga oldin biriktirilgan bo'lishi kerak.
+  - status_id mavjud status bo'lishi kerak.
+  - priority_id mavjud priority bo'lishi kerak.
+  - deadline bugungi yoki kelajak sana bo'lishi kerak.
+  - Aks holda backend validation/error response qaytaradi.
 
+Response misol:
+{
+    "status": true,
+    "message": "Task created successfully",
+    "data": {
+        "id": 1,
+        "title": "Create login API",
+        "body": "Login endpoint yaratish",
+        "assigned_to": 2,
+        "status_id": 1,
+        "priority_id": 1,
+        "deadline": "2026-05-20"
+    }
+}
 
 9.3. Task ko'rish — GET /api/projects/{project}/tasks/{task}
 ------------------------------------------------------------
@@ -709,13 +1103,57 @@ Auth: Bearer token kerak
 Permission: task.view
 
 Muhim:
-  task shu projectga tegishli bo'lishi kerak.
+  - task shu projectga tegishli bo'lishi kerak.
+  - Agar task boshqa projectga tegishli bo'lsa 404 qaytadi.
+
+Request misol:
+GET /api/projects/1/tasks/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Task found",
+    "data": {
+        "id": 1,
+        "title": "Create login API",
+        "body": "Login endpoint yaratish",
+        "deadline": "2026-05-20",
+        "project": {
+            "id": 1,
+            "name": "CRM system"
+        },
+        "creator": {
+            "id": 1,
+            "name": "Admin"
+        },
+        "developer": {
+            "id": 2,
+            "name": "Ali"
+        },
+        "status": {
+            "id": 1,
+            "name": "Todo"
+        },
+        "priority": {
+            "id": 1,
+            "name": "High"
+        }
+    }
+}
 
 
 9.4. Task yangilash — PUT /api/projects/{project}/tasks/{task}
 --------------------------------------------------------------
 Auth: Bearer token kerak
 Permission: task.update
+
+Validation:
+  - assigned_to: sometimes|nullable|exists:users,id
+  - status_id: sometimes|nullable|exists:task_statuses,id
+  - priority_id: sometimes|nullable|exists:task_priorities,id
+  - title: sometimes|string|max:255
+  - body: sometimes|nullable|string
+  - deadline: sometimes|nullable|date|after_or_equal:now
 
 Request body:
 {
@@ -727,20 +1165,55 @@ Request body:
     "deadline": "2026-05-25"
 }
 
+Muhim:
+  - task shu projectga tegishli bo'lishi kerak.
+  - assigned_to o'zgarsa, yangi user shu projectga biriktirilgan bo'lishi kerak.
+  - deadline bugungi yoki kelajak sana bo'lishi kerak.
+  - Aks holda backend validation/error response qaytaradi.
+
+Response misol:
+{
+    "status": true,
+    "message": "Task updated successfully",
+    "data": {
+        "id": 1,
+        "title": "Updated task title",
+        "body": "Updated body",
+        "assigned_to": 2,
+        "status_id": 2,
+        "priority_id": 1,
+        "deadline": "2026-05-25"
+    }
+}
 
 9.5. Task o'chirish — DELETE /api/projects/{project}/tasks/{task}
 -----------------------------------------------------------------
 Auth: Bearer token kerak
 Permission: task.delete
 
+Muhim:
+  - task shu projectga tegishli bo'lishi kerak.
+  - Agar task boshqa projectga tegishli bo'lsa 404 qaytadi.
+
+Request misol:
+DELETE /api/projects/1/tasks/1
+
+Response misol:
+{
+    "status": true,
+    "message": "Task deleted successfully",
+    "data": null
+}
+
 
 10. VALIDATION ERROR FORMAT
 ===========================
 
-Agar validation xato bo'lsa, Laravel odatda shunday qaytaradi:
+Agar validation xato bo'lsa, backend shunday qaytaradi:
 
 {
-    "message": "The given data was invalid.",
+    "status": false,
+    "message": "Validation xatoligi",
     "errors": {
         "title": [
             "The title field is required."
@@ -749,18 +1222,69 @@ Agar validation xato bo'lsa, Laravel odatda shunday qaytaradi:
 }
 
 
-11. STATUS CODE LAR
+11. MODEL TOPILMAGAN ERROR FORMAT
+=================================
+
+Agar model topilmasa:
+
+{
+    "status": false,
+    "message": "Model topilmadi",
+    "errors": null
+}
+
+
+12. AUTHENTICATION ERROR FORMAT
+===============================
+
+Agar token bo'lmasa yoki noto'g'ri bo'lsa:
+
+{
+    "status": false,
+    "message": "Tizimga kiring",
+    "errors": null
+}
+
+
+13. AUTHORIZATION ERROR FORMAT
+==============================
+
+Agar permission bo'lmasa:
+
+{
+    "status": false,
+    "message": "Ruxsat yo'q",
+    "errors": null
+}
+
+
+14. SERVER ERROR FORMAT
+=======================
+
+Production holatda:
+
+{
+    "status": false,
+    "message": "Server xatoligi",
+    "errors": null
+}
+
+Local/dev holatda message ichida real exception message chiqishi mumkin.
+
+
+15. STATUS CODE LAR
 ====================
 
-200 — muvaffaqiyatli
-401 — token yo'q yoki noto'g'ri
-403 — permission yo'q
-404 — data topilmadi
-422 — validation error
-500 — server error
+200 — OK
+201 — Created
+401 — Unauthorized
+403 — Forbidden
+404 — Not Found
+422 — Validation Error
+500 — Server Error
 
 
-12. FRONTEND UCHUN TAVSIYALAR
+16. FRONTEND UCHUN TAVSIYALAR
 ==============================
 
 - Login qilingandan keyin token localStorage yoki cookie ichida saqlanadi.
@@ -768,10 +1292,14 @@ Agar validation xato bo'lsa, Laravel odatda shunday qaytaradi:
 - 401 bo'lsa user login sahifaga qaytariladi.
 - 403 bo'lsa "Sizda ruxsat yo'q" degan xabar ko'rsatiladi.
 - List sahifalarda filterlar query params orqali yuboriladi.
+- Pagination qilingan endpointlarda data.items array bo'ladi.
+- Pagination ma'lumotlari data.pagination ichida bo'ladi.
 - Task listda filterlar birga ishlaganda AND bo'ladi.
-  Masalan:
-    /api/projects/1/tasks?assigned_to=2&status_id=1
-  bu assigned_to=2 VA status_id=1 bo'lgan tasklarni chiqaradi.
+
+Masalan:
+  /api/projects/1/tasks?assigned_to=2&status_id=1
+
+Bu assigned_to=2 VA status_id=1 bo'lgan tasklarni chiqaradi.
 
 - Task create/update formda:
   1) avval project tanlanadi
@@ -784,7 +1312,7 @@ Agar validation xato bo'lsa, Laravel odatda shunday qaytaradi:
 - User detail sahifada role ko'rsatiladi.
 
 
-13. POSTMAN TEST UCHUN MISOLLAR
+17. POSTMAN TEST UCHUN MISOLLAR
 ================================
 
 Login:
@@ -794,22 +1322,82 @@ POST /api/login
     "password": "password"
 }
 
+Current user:
+GET /api/me
+
+Logout:
+POST /api/logout
+
 User search:
 GET /api/users?search=ali
+
+User create:
+POST /api/users
+{
+    "name": "Ali",
+    "phone": "998901234567",
+    "password": "password",
+    "password_confirmation": "password",
+    "role_id": 2
+}
+
+User update:
+PUT /api/users/2
+{
+    "name": "Ali Updated",
+    "phone": "998901234568",
+    "role_id": 2
+}
 
 Role permission bo'yicha filter:
 GET /api/roles?permission_id=3
 
+Role create:
+POST /api/roles
+{
+    "name": "manager",
+    "display_name": "Manager",
+    "permission_ids": [1, 2, 3]
+}
+
 Permission search:
 GET /api/permissions?search=task
 
+Permission create:
+POST /api/permissions
+{
+    "name": "task.create",
+    "display_name": "Task Create"
+}
+
 Project developer bo'yicha filter:
 GET /api/projects?developer_id=2
+
+Project create:
+POST /api/projects
+{
+    "name": "CRM system",
+    "description": "Project description"
+}
 
 Projectga user biriktirish:
 POST /api/projects/1/users
 {
     "user_id": [2, 3]
+}
+
+Status create:
+POST /api/statuses
+{
+    "name": "Todo",
+    "sort_order": 1
+}
+
+Priority create:
+POST /api/priorities
+{
+    "name": "High",
+    "sort_order": 1
 }
 
 Task search:
@@ -820,3 +1408,27 @@ GET /api/projects/1/tasks?assigned_to=2&status_id=1
 
 Task date range:
 GET /api/projects/1/tasks?start_date=2026-05-01&end_date=2026-05-10
+
+Task create:
+POST /api/projects/1/tasks
+{
+    "title": "Create login API",
+    "body": "Login endpoint yaratish",
+    "assigned_to": 2,
+    "status_id": 1,
+    "priority_id": 1,
+    "deadline": "2026-05-20"
+}
+
+Task update:
+PUT /api/projects/1/tasks/1
+{
+    "title": "Updated task title",
+    "body": "Updated body",
+    "assigned_to": 2,
+    "status_id": 2,
+    "priority_id": 1,
+    "deadline": "2026-05-25"
+}
+
+
