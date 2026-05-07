@@ -3,15 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Role;
-use App\Models\Permission;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use App\Services\RoleService;
 use App\Http\Requests\StoreRoleRequest;
 use App\Http\Requests\UpdateRoleRequest;
+use App\Traits\ApiResponseTrait;
 
 class RoleController extends Controller
 {
+    use ApiResponseTrait;
+
     public function __construct(
         protected RoleService $roleService
     ) {}
@@ -19,43 +21,51 @@ class RoleController extends Controller
     public function list(Request $request): JsonResponse
     {
         $roles = $this->roleService->paginate($request);
-        return response()->json([
-            'success' => true,
-            'message' => 'Roles list',
-            'data' => $roles,
-        ]);
+
+        return $this->paginatedResponse($roles, 'List roles');
     }
+
     public function create(StoreRoleRequest $request): JsonResponse
     {
-        $role = $this->roleService->store($request->validated());
-        return response()->json([
-            'success' => true,
-            'message' => 'Role created successfully',
-            'data' => $role,
-        ], 201);
+        $role = $this->roleService->store(
+            $request->validated()
+        );
+
+        return $this->success(
+            $role,
+            'Role created successfully',
+            201
+        );
     }
+
     public function show(Role $role): JsonResponse
     {
-        return response()->json([
-            'success' => true,
-            'data' => $role->load('permissions'),
-        ]);
+        return $this->success(
+            $role->load('permissions'),
+            'Role found'
+        );
     }
+
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
-        $role = $this->roleService->update($role, $request->validated());
-        return response()->json([
-            'success' => true,
-            'message' => 'Role updated successfully',
-            'data' => $role,
-        ]);
+        $role = $this->roleService->update(
+            $role,
+            $request->validated()
+        );
+
+        return $this->success(
+            $role,
+            'Role updated successfully'
+        );
     }
+
     public function delete(Role $role): JsonResponse
     {
         $this->roleService->delete($role);
-        return response()->json([
-            'success' => true,
-            'message' => 'Role deleted successfully',
-        ]);
+
+        return $this->success(
+            null,
+            'Role deleted successfully'
+        );
     }
 }

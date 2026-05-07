@@ -753,7 +753,6 @@ Agar validation xato bo'lsa, Laravel odatda shunday qaytaradi:
 ====================
 
 200 — muvaffaqiyatli
-201 — yaratildi
 401 — token yo'q yoki noto'g'ri
 403 — permission yo'q
 404 — data topilmadi

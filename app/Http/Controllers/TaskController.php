@@ -9,9 +9,12 @@ use Illuminate\Http\JsonResponse;
 use App\Services\TaskService;
 use App\Http\Requests\StoreTaskRequest;
 use App\Http\Requests\UpdateTaskRequest;
+use App\Traits\ApiResponseTrait;
 
 class TaskController extends Controller
 {
+    use ApiResponseTrait;
+
     public function __construct(
         protected TaskService $taskService
     ) {}
@@ -19,12 +22,10 @@ class TaskController extends Controller
     public function list(Project $project, Request $request): JsonResponse
     {
         $tasks = $this->taskService->paginate($request);
-        return response()->json([
-            'success' => true,
-            'message' => 'Tasks list',
-            'data' => $tasks,
-        ]);
+
+        return $this->paginatedResponse($tasks, 'Tasks list');
     }
+
     public function create(StoreTaskRequest $request, Project $project): JsonResponse
     {
         $task = $this->taskService->store(
@@ -32,46 +33,56 @@ class TaskController extends Controller
             $request->user(),
             $project
         );
-        return response()->json([
-            'success' => true,
-            'message' => 'Task created successfully',
-            'data' => $task,
-        ], 201);
+
+        return $this->success(
+            $task,
+            'Task created successfully',
+            201
+        );
     }
+
     public function show(Project $project, Task $task): JsonResponse
     {
         abort_if($task->project_id !== $project->id, 404);
-        return response()->json([
-            'success' => true,
-            'data' => $task->load([
-                'project:id,name',
-                'creator:id,name',
-                'developer:id,name',
-                'status:id,name',
-                'priority:id,name',
-            ]),
+
+        $task = $task->load([
+            'project:id,name',
+            'creator:id,name',
+            'developer:id,name',
+            'status:id,name',
+            'priority:id,name',
         ]);
+
+        return $this->success(
+            $task,
+            'Task found'
+        );
     }
-    public function update(UpdateTaskRequest $request,Project $project, Task $task): JsonResponse
+
+    public function update(UpdateTaskRequest $request, Project $project, Task $task): JsonResponse
     {
         abort_if($task->project_id !== $project->id, 404);
+
         $task = $this->taskService->update(
             $task,
             $request->validated()
         );
-        return response()->json([
-            'success' => true,
-            'message' => 'Task updated successfully',
-            'data' => $task,
-        ]);
+
+        return $this->success(
+            $task,
+            'Task updated successfully'
+        );
     }
+
     public function delete(Project $project, Task $task): JsonResponse
     {
         abort_if($task->project_id !== $project->id, 404);
+
         $this->taskService->delete($task);
-        return response()->json([
-            'success' => true,
-            'message' => 'Task deleted successfully',
-        ]);
+
+        return $this->success(
+            null,
+            'Task deleted successfully'
+        );
     }
 }

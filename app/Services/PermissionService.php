@@ -10,11 +10,11 @@ class PermissionService
     {
         $search = $request->search;
         return Permission::query()
-            ->when($search, function ($query, $search) {
+            ->when(filled($search), function ($query, $search) {
                 $query->where('name', 'like', '%' . $search . '%');
             })
             ->latest()
-            ->paginate((int) $request->get('per_page', 10));
+            ->paginate((int) min($request->get('per_page', 10),70) );
     }
 
     public function store(array $data): Permission

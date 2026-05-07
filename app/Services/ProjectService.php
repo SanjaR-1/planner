@@ -26,7 +26,7 @@ class ProjectService
                 'developers:id,name'
             ])
             ->latest()
-            ->paginate((int) $request->get('per_page', 10));
+            ->paginate((int) min($request->get('per_page', 10),70) );
         return $projects;
     }
     public function store(array $data, User $user): Project

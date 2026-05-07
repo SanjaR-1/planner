@@ -21,7 +21,7 @@ class RoleService
             ->when($request->sort === 'created_at_desc', fn ($q) => $q->orderByDesc('created_at'))
             ->with(['permissions:id,display_name'])
             ->latest()
-            ->paginate((int) $request->get('per_page', 10));
+            ->paginate((int) min($request->get('per_page', 10),70) );
         return $roles;
     }
     public function store(array $data): Role
