@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class StoreTaskPriorityRequest extends FormRequest
+class ListRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -14,8 +14,9 @@ class StoreTaskPriorityRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|unique:task_priorities,name|string|max:255',
-            'sort_order' => 'required|integer|min:0'
+            'per_page' => 'sometimes|integer|min:1|max:70',
+            'search'   => 'sometimes|string|max:255',
+            'sort'     => 'sometimes|string|in:asc,desc',
         ];
     }
 }

@@ -10,16 +10,15 @@ class UpdateTaskRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
-            'assigned_to' => 'sometimes|nullable|exists:users,id',
-            'status_id' => 'sometimes|nullable|exists:task_statuses,id',
-            'priority_id' => 'sometimes|nullable|exists:task_priorities,id',
+            'assigned_to' => 'sometimes|exists:users,id',
+            'status_id' => 'sometimes|exists:task_statuses,id',
+            'priority_id' => 'sometimes|exists:task_priorities,id',
             'title' => 'sometimes|string|max:255',
-            'body' => 'sometimes|nullable|string',
-            'deadline' => 'sometimes|nullable|date|after_or_equal:now',
+            'body' => 'sometimes|string',
+            'deadline' => 'sometimes|date|after_or_equal:now',
         ];
     }
 }

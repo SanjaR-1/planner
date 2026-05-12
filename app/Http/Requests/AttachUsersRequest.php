@@ -1,9 +1,7 @@
 <?php
-
 namespace App\Http\Requests;
 use Illuminate\Foundation\Http\FormRequest;
-
-class UserLoginRequest extends FormRequest
+class AttachUsersRequest extends FormRequest
 {
     public function authorize(): bool
     {
@@ -12,8 +10,8 @@ class UserLoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'phone' => 'required|regex:/^998[0-9]{9}$/',
-            'password' => 'required|string',
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:users,id'
         ];
     }
 }

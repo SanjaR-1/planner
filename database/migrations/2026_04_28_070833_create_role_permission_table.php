@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('permission_id')->constrained('permissions')->cascadeOnDelete();
             $table->timestamps();
             $table->unique(['role_id', 'permission_id']);
+            $table->enum('is_active', ['1', '0'])->default('1');
         });
     }
     public function down(): void

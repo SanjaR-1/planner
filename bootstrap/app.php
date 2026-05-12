@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Auth\Access\AuthorizationException;
+use App\Exceptions\BusinessException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,30 +27,32 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (ValidationException $e, Request $request) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Validation xatoligi',
                 'errors'  => $e->errors()
-            ], 422);
+            ], 400);
+        });
+        $exceptions->render(function (BusinessException $e, Request $request) {
+            return response()->json([
+                'status' => false,
+                'errors' => $e->getMessage()
+            ], 400);
         });
         $exceptions->render(function (ModelNotFoundException $e, Request $request) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Model topilmadi',
                 'errors'  => null
-            ], 404);
+            ], 400);
         });
         $exceptions->render(function (AuthenticationException $e, Request $request) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Tizimga kiring',
                 'errors'  => null
-            ], 401);
+            ], 400);
         });
         $exceptions->render(function (AuthorizationException $e, Request $request) {
             return response()->json([
                 'status'  => false,
-                'message' => 'Ruxsat yo\'q',
                 'errors'  => null
-            ], 403);
+            ], 400);
         });
         $exceptions->render(function (Throwable $e, Request $request) {
             return response()->json([

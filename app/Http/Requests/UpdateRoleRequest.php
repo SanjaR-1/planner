@@ -11,11 +11,9 @@ class UpdateRoleRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         $role = $this->route('role');
-
         return [
             'name' => [
                 'sometimes',
@@ -23,8 +21,8 @@ class UpdateRoleRequest extends FormRequest
                 'max:255',
                 Rule::unique('roles', 'name')->ignore($role),
             ],
-            'display_name' => 'sometimes|nullable|string|max:255',
-            'permission_ids' => 'nullable|array',
+            'display_name' => 'sometimes|string|max:255',
+            'permission_ids' => 'required|array',
             'permission_ids.*' => 'exists:permissions,id',
         ];
     }

@@ -11,7 +11,6 @@ class UpdateTaskPriorityRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
@@ -22,7 +21,7 @@ class UpdateTaskPriorityRequest extends FormRequest
                 Rule::unique('task_priorities', 'name')
                     ->ignore($this->route('priority')),
             ],
-            'sort_order' => 'sometimes|nullable|integer|min:0',
+            'sort_order' => 'sometimes|integer|min:0',
         ];
     }
 }

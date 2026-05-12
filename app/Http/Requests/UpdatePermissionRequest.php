@@ -11,7 +11,6 @@ class UpdatePermissionRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         $permission = $this->route('permission');
@@ -23,7 +22,7 @@ class UpdatePermissionRequest extends FormRequest
                 'max:255',
                 Rule::unique('permissions', 'name')->ignore($permission),
             ],
-            'display_name' => 'nullable|string|max:255',
+            'display_name' => 'sometimes|string|max:255',
         ];
     }
 }

@@ -44,11 +44,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/statuses', [TaskStatusController::class, 'list'])->middleware('permission:task.view');
     Route::post('/statuses', [TaskStatusController::class, 'create'])->middleware('permission:task.create');
+    Route::get('/statuses/{status}', [TaskStatusController::class, 'show'])->middleware('permission:task.view');
     Route::put('/statuses/{status}', [TaskStatusController::class, 'update'])->middleware('permission:task.update');
     Route::delete('/statuses/{status}', [TaskStatusController::class, 'delete'])->middleware('permission:task.delete');
 
     Route::get('/priorities', [TaskPriorityController::class, 'list'])->middleware('permission:task.view');
     Route::post('/priorities', [TaskPriorityController::class, 'create'])->middleware('permission:task.create');
+    Route::get('/priorities/{priority}', [TaskPriorityController::class, 'show'])->middleware('permission:task.view');
     Route::put('/priorities/{priority}', [TaskPriorityController::class, 'update'])->middleware('permission:task.update');
     Route::delete('/priorities/{priority}', [TaskPriorityController::class, 'delete'])->middleware('permission:task.delete');
 

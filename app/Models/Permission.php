@@ -10,6 +10,7 @@ class Permission extends Model
     protected $fillable = [
         'name',
         'display_name',
+        'is_active'
     ];
 
     public function roles():BelongsToMany

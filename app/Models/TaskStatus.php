@@ -7,6 +7,7 @@ class TaskStatus extends Model
     protected $fillable = [
         'name',
         'sort_order',
+        'is_active'
     ];
     public function tasks():HasMany
     {

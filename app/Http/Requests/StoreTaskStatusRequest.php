@@ -10,12 +10,11 @@ class StoreTaskStatusRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
             'name' => 'required|unique:task_statuses,name|string|max:255',
-            'sort_order' => 'nullable|integer|min:0',
+            'sort_order' => 'required|integer|min:0',
         ];
     }
 }

@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('title');
             $table->longText('body')->nullable();
             $table->dateTime('deadline')->nullable();
+            $table->enum('is_active', ['1', '0'])->default('1');
             $table->timestamps();
         });
     }

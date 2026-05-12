@@ -15,6 +15,7 @@ class Task extends Model
         'body',
         'title',
         'deadline',
+        'is_active'
     ];
     protected $casts = [
         'deadline' => 'datetime',

@@ -10,6 +10,7 @@ class Project extends Model
         'created_by',
         'name',
         'description',
+        'is_active'
     ];
     public function creator():BelongsTo
     {

@@ -1,9 +1,7 @@
 <?php
-
 namespace App\Http\Controllers;
-
 use App\Models\Role;
-use Illuminate\Http\Request;
+use App\Http\Requests\ListRequest;
 use Illuminate\Http\JsonResponse;
 use App\Services\RoleService;
 use App\Http\Requests\StoreRoleRequest;
@@ -13,59 +11,45 @@ use App\Traits\ApiResponseTrait;
 class RoleController extends Controller
 {
     use ApiResponseTrait;
-
     public function __construct(
         protected RoleService $roleService
     ) {}
-
-    public function list(Request $request): JsonResponse
+    public function list(ListRequest $request): JsonResponse
     {
         $roles = $this->roleService->paginate($request);
-
-        return $this->paginatedResponse($roles, 'List roles');
+        return $this->paginatedResponse($roles);
     }
-
     public function create(StoreRoleRequest $request): JsonResponse
     {
         $role = $this->roleService->store(
             $request->validated()
         );
-
         return $this->success(
-            $role,
-            'Role created successfully',
-            201
+            $role
         );
     }
-
     public function show(Role $role): JsonResponse
     {
+        $data = $this->roleService->show($role);
         return $this->success(
-            $role->load('permissions'),
-            'Role found'
+            $data
         );
     }
-
     public function update(UpdateRoleRequest $request, Role $role): JsonResponse
     {
         $role = $this->roleService->update(
             $role,
             $request->validated()
         );
-
         return $this->success(
             $role,
-            'Role updated successfully'
         );
     }
-
     public function delete(Role $role): JsonResponse
     {
         $this->roleService->delete($role);
-
         return $this->success(
-            null,
-            'Role deleted successfully'
+            null
         );
     }
 }

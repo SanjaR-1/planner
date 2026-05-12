@@ -15,12 +15,13 @@ return new class extends Migration
             $table->id();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->timestamps();
             $table->unique(['project_id', 'user_id']);
+            $table->enum('is_active', ['1', '0'])->default('1');
+            $table->timestamps();
         });
     }
     public function down(): void
     {
-        Schema::dropIfExists('project_users');
+        Schema::dropIfExists('project_user');
     }
 };

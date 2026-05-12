@@ -1,28 +1,30 @@
 <?php
-
 namespace App\Services;
-
+use App\Exceptions\BusinessException;
 use App\Models\Task;
 use App\Models\Project;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
+use Carbon\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Http\Request;
 class TaskService
 {
-    public function paginate($request)
+    public function paginate(Request $request):LengthAwarePaginator
     {
-        $search = $request->search;
+        $allowedSorts = ['asc', 'desc'];
+        $sort = in_array($request->sort, $allowedSorts) ? $request->sort : null;
         $tasks = Task::query()
+            ->where('is_active','=','1')
             #task title bo'yicha poisk
-            ->when(filled($search), function ($query) use ($search) {
-                $query->where('title', 'like', "%{$search}%");
+            ->when(filled($request->search), function ($query) use ($request) {
+                $query->where('title', 'like', '%'.$request->search.'%');
             })
             #qaysi vaqt oralig'ida qilingan
             ->when($request->start_date && $request->end_date,
                 function ($query) use ($request) {
                     $query->whereBetween('created_at', [
-                        $request->start_date,
-                        $request->end_date
+                        Carbon::parse($request->start_date)->startOfDay(),
+                        Carbon::parse($request->end_date)->endOfDay()
                     ]);
                 }
             )
@@ -51,22 +53,42 @@ class TaskService
                 fn ($query) => $query
                 ->where('created_by', $request->created_by)
             )
-            ->when($request->sort === 'created_at_asc', fn ($q) => $q->orderBy('created_at'))
-            ->when($request->sort === 'created_at_desc', fn ($q) => $q->orderByDesc('created_at'))
+            ->when($sort,function ($q) use ($sort){
+                if($sort == 'asc'){
+                    $q->orderBy('created_at');
+                }else{
+                    $q->orderByDesc('created_at');
+                }
+            },function ($q){
+                $q->latest();
+            })
             ->with([
                 'project:id,name',
                 'status:id,name',
                 'priority:id,name',
                 'developer:id,name',
                 'creator:id,name',
-            ])->paginate((int) min($request -> get('per_page',10),70));
+            ])
+            ->paginate((int) $request->get('per_page', 10));
         return $tasks;
+    }
+    public function show(Project $project, Task $task):Task{
+        if ($task->project_id !== $project->id) {
+            throw new BusinessException();
+        }
+        return $task->load([
+            'project:id,name',
+            'creator:id,name',
+            'developer:id,name',
+            'status:id,name',
+            'priority:id,name',
+        ]);
     }
     public function store(array $data, User $user, Project $project): Task
     {
         if (!empty($data['assigned_to'])) {
-            $this->developerProjectgaBiriktirilganmi(
-                $project->id,
+            $this->attachedDeveloperCheck(
+                $project,
                 $data['assigned_to']
             );
         }
@@ -83,11 +105,13 @@ class TaskService
     }
     public function update(Task $task, array $data): Task
     {
-        $projectId = $data['project_id'] ?? $task->project_id;
-
+        if($task->is_active == '0'){
+            throw new BusinessException();
+        }
         if (!empty($data['assigned_to'])) {
-            $this->developerProjectgaBiriktirilganmi(
-                $projectId,
+            $project = Project::findOrFail($data['project_id'] ?? $task->project_id);
+            $this->attachedDeveloperCheck(
+                $project,
                 $data['assigned_to']
             );
         }
@@ -100,21 +124,21 @@ class TaskService
             'priority:id,name',
         ]);
     }
-
-    public function delete(Task $task): bool
+    public function delete(Task $task): void
     {
-        return $task->delete();
+        if($task -> is_active == '0'){
+            throw new BusinessException();
+        }
+        $task->is_active = '0';
+        $task->save();
     }
-    private function developerProjectgaBiriktirilganmi(int $projectId, int $developerId): void
+    private function attachedDeveloperCheck(Project $project, int $developerId): void
     {
-        $exists = DB::table('project_user')
-            ->where('project_id', $projectId)
-            ->where('user_id', $developerId)
+        $exists = $project->developers()
+            ->where('users.id', $developerId)
             ->exists();
         if (! $exists) {
-            throw ValidationException::withMessages([
-                'assigned_to' => ['Bu developer ushbu projectga biriktirilmagan.'],
-            ]);
+            throw new BusinessException();
         }
     }
 }

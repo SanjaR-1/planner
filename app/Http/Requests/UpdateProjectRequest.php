@@ -11,7 +11,6 @@ class UpdateProjectRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
@@ -22,7 +21,7 @@ class UpdateProjectRequest extends FormRequest
                 Rule::unique('projects', 'name')
                     ->ignore($this->route('project')),
             ],
-            'description' => 'nullable|string',
+            'description' => 'sometimes|string',
         ];
     }
 }

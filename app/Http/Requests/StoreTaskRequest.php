@@ -10,16 +10,15 @@ class StoreTaskRequest extends FormRequest
     {
         return true;
     }
-
     public function rules(): array
     {
         return [
-            'assigned_to' => 'nullable|exists:users,id',
+            'assigned_to' => 'required|exists:users,id',
             'status_id' => 'required|exists:task_statuses,id',
             'priority_id' => 'required|exists:task_priorities,id',
             'title' => 'required|string|max:255',
             'body' => 'nullable|string',
-            'deadline' => 'nullable|date|after_or_equal:now',
+            'deadline' => 'required|date|after_or_equal:now',
         ];
     }
 }

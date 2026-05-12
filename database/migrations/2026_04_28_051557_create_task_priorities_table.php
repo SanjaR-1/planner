@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique();
             $table->integer('sort_order')->default(0);
+            $table->enum('is_active', ['1', '0'])->default('1');
             $table->timestamps();
         });
     }

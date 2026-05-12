@@ -15,6 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('name')->unique(); // task.create
             $table->string('display_name')->nullable();
+            $table->enum('is_active', ['1', '0'])->default('1');
             $table->timestamps();
         });
     }

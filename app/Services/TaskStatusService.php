@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
 use App\Models\TaskStatus;
 use Illuminate\Support\Collection;
 
@@ -10,6 +11,12 @@ class TaskStatusService
     public function list(): Collection
     {
         return TaskStatus::orderBy('sort_order','asc')->get();
+    }
+    public function show(TaskStatus $taskStatus):TaskStatus{
+        if($taskStatus->is_active == '0'){
+            throw new BusinessException();
+        }
+        return $taskStatus;
     }
     public function store( array $data): TaskStatus
     {

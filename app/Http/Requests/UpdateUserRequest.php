@@ -1,16 +1,11 @@
 <?php
 
 namespace App\Http\Requests;
-
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return true;
@@ -21,10 +16,10 @@ class UpdateUserRequest extends FormRequest
             'name' => 'sometimes|string|max:255',
             'phone' => [
                 'sometimes',
-                'string',
+                'regex:/^998[0-9]{9}$/',
                 Rule::unique('users', 'phone')->ignore($this->route('user')),
             ],
-            'password' => 'nullable|string|min:6|confirmed',
+            'password' => 'nullable|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,}$/',
             'role_id' => 'sometimes|exists:roles,id'
         ];
     }
